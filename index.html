@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Онлайн таймер</title>
+</head>
+<body>
+
+<h1>Таймер</h1>
+<h2 id="time">0</h2>
+
+<button onclick="startTimer()">Старт</button>
+
+<script>
+function startTimer(){
+    fetch("/start", {method:"POST"})
+}
+
+setInterval(()=>{
+    fetch("/get_time")
+    .then(r=>r.json())
+    .then(data=>{
+        document.getElementById("time").innerText =
+            Math.floor(data.seconds) + " сек"
+    })
+},1000)
+</script>
+
+</body>
+</html>
