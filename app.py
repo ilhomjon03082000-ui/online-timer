@@ -1,8 +1,10 @@
 from flask import Flask, render_template, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+import os
 
 app = Flask(__name__)
+
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///timer.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
@@ -10,10 +12,11 @@ db = SQLAlchemy(app)
 
 class Timer(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    start_time = db.Column(db.DateTime, nullable=True)
+    start_time = db.Column(db.DateTime)
 
-# 👇 ВАЖНО — создаём таблицу при запуске сервера
-with app.app_context():
+# создаём таблицу при старте (важно для gunicorn)
+@app.before_request
+def create_tables():
     db.create_all()
     if not Timer.query.first():
         db.session.add(Timer(start_time=None))
@@ -33,7 +36,7 @@ def start():
 @app.route("/get_time")
 def get_time():
     timer = Timer.query.first()
-    if timer.start_time:
+    if timer and timer.start_time:
         diff = datetime.utcnow() - timer.start_time
         return jsonify({"seconds": diff.total_seconds()})
     return jsonify({"seconds": 0})
